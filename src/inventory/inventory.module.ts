@@ -4,6 +4,7 @@ import { PlantService } from './plant.service';
 
 @Module({
   imports: [],
+  exports: [PlantService],
   controllers: [InventoryController],
   providers: [PlantService],
 })

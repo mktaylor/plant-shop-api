@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { PlantService } from '../inventory/plant.service';
 import { Address } from '../domain/address.model';
 import { Customer } from '../domain/customer.model';
 import { Order } from '../domain/order.model';
+import { InternalError } from '../domain/error.model';
+import { Plant } from '../domain/plant.model';
+import { OrderItem } from '../domain/order-item.model';
 
 @Injectable()
 export class OrdersService {
@@ -19,54 +23,114 @@ export class OrdersService {
           'United States',
         ),
       ),
-      [],
+      [
+        {
+          plantId: 1,
+          quantity: 2,
+        },
+      ],
+      25.98,
       'Plant001',
     ),
   ];
 
-  constructor() {}
+  constructor(private readonly plantService: PlantService) {}
 
   getOrders(): Order[] {
-    return this.orders;
+    try {
+      return this.orders;
+    } catch(e) {
+      console.log(e);
+      throw new HttpException(
+        'There was an error fetching orders',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   getOrderById(id: number): Order {
-    const order = this.orders.find((order: Order) => order.id === id);
-    console.log(JSON.stringify(order));
-    // TODO: Return 404 status code and proper error
-    if (!order) {
-      throw new Error(`Order not found with id: ${id}`);
+    try {
+      const order = this.orders.find((order: Order) => order.getOrderId() === id);
+      if (!order) {
+        throw new HttpException(
+          `Order not found with id: ${id}`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return order;
+    } catch (e) {
+      console.log(e);
+      throw new HttpException(
+        'There was an error fetching your order',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    return order;
   }
 
-  getOrderByOrderNumber(orderNumber: string): Order {
-    const order = this.orders.find(
-      (order: Order) => order.orderNumber === orderNumber,
-    );
-    // TODO: Return 404 status code and proper error
-    if (!order) {
-      throw new Error(`Order not found with order number: ${orderNumber}`);
-    }
-    return order;
-  }
-
+  // These operations would typically be done asynchronously  
   createOrder(order: Order) {
     try {
-      this.validateOrder();
+      this.validateOrder(order);
+      this.generateValidOrder(order);
+      this.persistOrder(order);
+      return order;
     } catch (e) {
-      console.log('Invalid order');
+      console.log(e);
+      throw new HttpException(
+        'There was an error processing your order',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    const orderId = this.getNextOrderId();
-    order.id = orderId;
-    order.orderNumber = this.generateOrderNumber(orderId);
-    this.orders.push(order);
-    console.log(this.orders);
+  }
+
+  private validateOrder(order: Order): Order {
+    const plantLookup: { [id: number]: Plant } = this.getPlantLookup();
+    const errors: InternalError[] = [];
+    const itemsInOrder = order.items;
+    if (!itemsInOrder) {
+      throw new HttpException(
+        'Order must contain at least one item.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    itemsInOrder.forEach((item: OrderItem, i: number) => {
+      const plant: Plant = plantLookup[item.plantId.toString()];
+      if (item.quantity > plant.quantity) {
+        errors.push(
+          new InternalError(
+            'INSUFF_QUANTITY',
+            `There is an insuffient quantity of ${plant.displayName} to complete this order.`,
+          ),
+        );
+        // Remove the item from the order that cannot be fulfilled before calculating total
+        itemsInOrder.splice(i, 1);
+      } else {
+        plant.reduceQuantity(item.quantity);
+      }
+    });
+
+    if (!!errors && errors.length > 0) {
+      order.setErrors(errors);
+    }
+    
     return order;
+  }
+
+  private persistOrder(order: Order): void {
+    // Add Order to list (table in db)
+    this.orders.push(order);
+  }
+
+  private generateValidOrder(order: Order): void {
+    const orderId = this.getNextOrderId();
+    order.setOrderId(orderId);
+    order.orderNumber = this.generateOrderNumber(orderId);
+    order.total = this.calculateTotal(order);
   }
 
   private getNextOrderId(): number {
-    const orderIds: number[] = this.orders.map((o: Order) => o.id);
+    const orderIds: number[] = this.orders.map((o: Order) => o.getOrderId());
     let maxId = Math.max(...orderIds);
     return (maxId += 1);
   }
@@ -76,7 +140,26 @@ export class OrdersService {
     return `${prefix}${id.toString().padStart(3, '0')}`;
   }
 
-  private validateOrder(): boolean {
-    throw new Error('test');
+  private calculateTotal(order: Order): number {
+    let total = 0;
+    if (!!order && !!order.items) {
+      const plantLookup = this.getPlantLookup();
+      order.items.forEach((item: OrderItem) => {
+        const plant = plantLookup[item.plantId];
+        total += plant.price * item.quantity;
+      });
+    }
+    return total;
+  }
+
+  private getPlantLookup(): { [plantId: number]: Plant } {
+    // This value could possibly be cached or this method could
+    // be improved to not make a db call multiple times per order creation
+    const plantInventory = this.plantService.getAllPlants();
+    const plantLookup: { [id: number]: Plant } = {};
+    plantInventory.forEach((plant: Plant) => {
+      plantLookup[plant.id] = plant;
+    });
+    return plantLookup;
   }
 }

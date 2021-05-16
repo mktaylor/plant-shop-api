@@ -1,4 +1,10 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { PlantService } from './plant.service';
 
 @Controller('inventory')
@@ -11,7 +17,13 @@ export class InventoryController {
   }
 
   @Get('plants/:id')
-  getPlantInventory(@Param('id', ParseIntPipe) id: number) {
+  getPlantInventory(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
     return this.plantService.getPlantById(id);
   }
 }

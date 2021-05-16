@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Plant } from '../domain/plant.model';
 
 @Injectable()
@@ -49,15 +49,33 @@ export class PlantService {
   constructor() {}
 
   getAllPlants() {
-    return this.plants;
+    try {
+      return this.plants;
+    } catch (e) {
+      console.log(e);
+      throw new HttpException(
+        'There was an error fetching plant inventory',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   getPlantById(id: number): Plant {
-    const plant = this.plants.find((plant: Plant) => plant.id === id);
-    // TODO: Return 404 status code and proper error
-    if (!plant) {
-      throw new Error(`Plant not found with id: ${id}`);
+    try {
+      const plant = this.plants.find((plant: Plant) => plant.id === id);
+      if (!plant) {
+        throw new HttpException(
+          `Plant not found with id: ${id}`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return plant;
+    } catch (e) {
+      console.log(e);
+      throw new HttpException(
+        'There was an error fetching plant by id',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    return plant;
   }
 }

@@ -28,13 +28,13 @@ Domain
     id: number,
     orderNumber?: string, (?)
     customer: Customer,
-    items: Item[]
+    items: OrderItem[],
+    total: number
   }
 
-  Item
+  OrderItem
   {
     id: number,
-    type?: 'plant', // how to make this flexible?
     quantity: number,
   }
 
@@ -60,7 +60,7 @@ Domain
     _embedded?: Error[]
   }
 
-  Error
+  InternalError
   {
     code: string,
     message: string,
