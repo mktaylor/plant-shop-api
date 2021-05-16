@@ -1,0 +1,19 @@
+{
+  "customer": {
+      "id": 1,
+      "name": "Ashley Smith",
+      "address": {
+          "lineOne": "123 Main Street",
+          "city": "Austin",
+          "region": "TX",
+          "postalCode": "78704",
+          "country": "United States"
+      }
+  },
+  "items": [
+    {
+      "id": 1,
+      "quantity": 2
+    }
+  ]
+}

@@ -7,6 +7,6 @@ export class BaseResponse {
   }
 
   _embedded?: {
-    errors?: Error[]
-  }
+    errors?: Error[];
+  };
 }

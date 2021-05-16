@@ -1,9 +1,5 @@
 export class Item {
-  constructor(
-    id: number,
-    quantity: number,
-    type: 'plant' | 'other'
-  ) {
+  constructor(id: number, quantity: number, type: 'plant' | 'other') {
     this.id = id;
     this.quantity = quantity;
     this.type = type;

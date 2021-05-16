@@ -40,6 +40,7 @@ Domain
 
   Customer
   {
+    id: number, // unqiue identifier to be used as a PK
     name: string,
     address: Address
   }
