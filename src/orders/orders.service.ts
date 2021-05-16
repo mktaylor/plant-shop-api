@@ -96,6 +96,7 @@ export class OrdersService {
 
     itemsInOrder.forEach((item: OrderItem, i: number) => {
       const plant: Plant = plantLookup[item.plantId.toString()];
+      item.plantName = plant.displayName;
       if (item.quantity > plant.quantity) {
         errors.push(
           new InternalError(
