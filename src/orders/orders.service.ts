@@ -26,6 +26,7 @@ export class OrdersService {
       [
         {
           plantId: 1,
+          plantName: 'Chinese Evergreen',
           quantity: 2,
         },
       ],
