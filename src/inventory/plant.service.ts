@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Plant } from '../domain/plant.model';
 
 @Injectable()
-export class InventoryService {
+export class PlantService {
 
   plants: Plant[] = [
     new Plant(1, 'Chinese Evergreen', 'Aglaonema commutatum', 12.99, 3, 'The Chinese evergreen is a staple indoor plant, widely used in interior decorating because of its ability to withstand poor conditions.'),
@@ -15,11 +15,11 @@ export class InventoryService {
   constructor() {
   }
 
-  getAllPlantInventory() {
+  getAllPlants() {
     return this.plants;
   }
 
-  getPlantInventory(id: any): Plant {
+  getPlantById(id: any): Plant {
     const plant = this.plants.find((plant: Plant) => plant.id == id);
     // TODO: Return 404 status code and proper error
     if (!plant) {

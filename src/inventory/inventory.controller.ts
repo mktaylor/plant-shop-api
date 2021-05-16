@@ -1,17 +1,17 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { InventoryService } from './inventory.service';
+import { PlantService } from './plant.service';
 
 @Controller('inventory')
 export class InventoryController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(private readonly plantService: PlantService) {}
 
   @Get('plants')
   getAllPlantInventory() {
-    return this.inventoryService.getAllPlantInventory();
+    return this.plantService.getAllPlants();
   }
 
   @Get('plants/:id')
   getPlantInventory(@Param('id') id: string) {
-    return this.inventoryService.getPlantInventory(id);
+    return this.plantService.getPlantById(id);
   }
 }
