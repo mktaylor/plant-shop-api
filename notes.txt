@@ -1,0 +1,66 @@
+API
+- inventory
+  - GET /plants => full list of plants
+    Response => Plant[]
+  - GET /plants/:itemId => entry for specific plant by unique identifier
+    Response => Plant
+- orders
+  - GET /:orderId => specific purchase order by unique identifier
+    Response => Order
+  - GET /:orderNumber => specific purchase order by order number
+    Response => Order
+  - POST => create order
+    Request/Response => Order
+
+Domain
+  Plant
+  {
+    id: number,
+    displayName: string,
+    scientificName: string,
+    price: number,
+    quantity: number,
+    fact: string
+  }
+
+  Order
+  {
+    id: number,
+    orderNumber?: string, (?)
+    customer: Customer,
+    items: Item[]
+  }
+
+  Item
+  {
+    id: number,
+    type?: 'plant', // how to make this flexible?
+    quantity: number,
+  }
+
+  Customer
+  {
+    name: string,
+    address: Address
+  }
+
+  Address
+  {
+    lineOne: string,
+    lineTwo?: string,
+    city: string,
+    region: string,
+    postalCode: string,
+    country: string
+  }
+
+  Base Response
+  {
+    _embedded?: Error[]
+  }
+
+  Error
+  {
+    code: string,
+    message: string,
+  }
